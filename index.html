@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>인천공항 장애처리 매뉴얼</title>
+    <style>
+        :root {
+            --primary-color: #005A9C;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .search-container {
+            padding: 12px 16px;
+            background-color: white;
+            position: sticky;
+            top: 54px;
+            z-index: 99;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .search-container input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #cccccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .search-container input:focus {
+            border-color: var(--primary-color);
+        }
+        .manual-list {
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .issue-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #111;
+        }
+        .solution {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            background-color: #fafafa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            white-space: pre-line;
+        }
+        .no-result {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>🛠️ 현장 장애처리 매뉴얼</header>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="장비명 또는 증상 검색 (예: BTP, 용지)" oninput="filterManual()">
+    </div>
+
+    <div class="manual-list" id="manualList">
+        <!-- Javascript로 데이터가 렌더링됩니다 -->
+    </div>
+
+    <script>
+        // 카카오톡 대화 내용 기반 장애처리 데이터
+        const manualData = [
+            {
+                category: "프린터 (BTP/BPP/CTP)",
+                issue: "용지 걸림 (PAPER JAM) 및 급지 불량",
+                solution: "1. 프린터 덮개를 열어 걸린 용지 및 지분(찌꺼기) 제거\n2. 급지 롤러 및 헤드, 센서 부위 클리닝\n3. 용지 투입구 간격 재조정 및 용지 걸이 나사 고정"
+            },
+            {
+                category: "프린터 (BTP/BPP/CTP)",
+                issue: "마진 오류 및 커팅 위치 불량 (백지/밀림)",
+                solution: "1. PrinterSet 접속하여 Top/Bottom Margin 또는 XSTART 값 조정\n2. Black Mark 값 변경 (예: 35->15, 50%->40%)\n3. XML 설정 파일 수정 후 재적용"
+            },
+            {
+                category: "프린터 (BTP/BPP/CTP)",
+                issue: "전원 꺼짐(POWER OFF) / 인식 불가(LINK DOWN)",
+                solution: "1. 전원 어댑터 및 후면부 케이블 꽉 끼워 재연결\n2. USB 데이터 케이블 재연결 또는 포트 위치 변경\n3. 장비 OFF/ON 후 WKS/PF 재부팅"
+            },
+            {
+                category: "스캐너 (MRP/BCR/ICR)",
+                issue: "여권 및 바코드 인식 불가",
+                solution: "1. 데이터(USB) 케이블 및 전원 케이블 분리 후 재연결\n2. 장치 전원 OFF/ON 및 시스템에서 장치 초기화/무결성 검사\n3. 팬타스캐너(Pentascanner) 프로그램 리셋"
+            },
+            {
+                category: "스캐너 (MRP/BCR/ICR)",
+                issue: "BCR 크래들 충전 불량 및 먹통",
+                solution: "1. 크래들 하단 전원/데이터 케이블 접촉 불량 확인 및 재연결\n2. 방아쇠 없이 불이 켜져 있을 경우 크래들 앞쪽 버튼 1회 눌러 초기화"
+            },
+            {
+                category: "셀프수하물 (SBD)",
+                issue: "컨베이어 에러 및 수하물 미이동",
+                solution: "1. 시스템 화면 또는 제어 패널에서 컨베이어 리셋 실행\n2. 가방이 끼었을 경우 리턴 배기지(Return Baggage) 기능으로 회수 후 재수속"
+            },
+            {
+                category: "셀프수하물 (SBD)",
+                issue: "침입 탐지 발생 및 메인 벨트 멈춤",
+                solution: "1. 디스패치 벨트 안쪽 이물질/수하물 여부 확인\n2. 시스템에서 '침입 탐지 해제(서비스 점검 해제)' 실행하여 벨트 재가동"
+            },
+            {
+                category: "셀프수하물 (SBD)",
+                issue: "저울 영점(무게) 오류",
+                solution: "1. 벨트 위 짐이 없는 상태 확인\n2. 장비 영점 조정 버튼을 눌러 무게를 0.0kg으로 리셋"
+            },
+            {
+                category: "스마트패스 (SPS)",
+                issue: "출국장/교통약자 도어 미작동 (안 열림/닫힘)",
+                solution: "1. 승객 충돌 등으로 멈춘 경우 수동 개폐 버튼을 눌러 강제 동작\n2. 컨트롤 보드 내부 리셋 버튼을 눌러 도어 제어 초기화"
+            },
+            {
+                category: "공통 시스템 (PC)",
+                issue: "단말기 멈춤(Hold) / 흑색 화면 / 터치 불가",
+                solution: "1. PF(플랫폼) 재시작 또는 항공사 App(FDK 등) 재실행\n2. DCU 또는 WKS 강제 재부팅\n3. 모니터 후면 HDMI 케이블 및 KVM 스위치 전원 OFF/ON"
+            }
+        ];
+
+        const listContainer = document.getElementById('manualList');
+
+        // 데이터 렌더링 함수
+        function renderManuals(data) {
+            listContainer.innerHTML = '';
+            if (data.length === 0) {
+                listContainer.innerHTML = '<div class="no-result">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="badge">${item.category}</div>
+                    <div class="issue-title">Q. ${item.issue}</div>
+                    <div class="solution">${item.solution}</div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        // 검색 필터 함수
+        function filterManual() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filteredData = manualData.filter(item => 
+                item.category.toLowerCase().includes(query) ||
+                item.issue.toLowerCase().includes(query) ||
+                item.solution.toLowerCase().includes(query)
+            );
+            renderManuals(filteredData);
+        }
+
+        // 초기 렌더링
+        window.onload = () => {
+            renderManuals(manualData);
+        };
+    </script>
+</body>
+</html>
